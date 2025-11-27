@@ -1,0 +1,23 @@
+# Config file
+
+# Directories
+rawdata_dir: "rawdata"
+landcover_dir: "landcover"
+era5_dir: "era5"
+landcover_txt_files_dir: "src/src_landcover/txt_files"
+landcover_legend_dir: "src/src_landcover"
+data_dir: "data"
+
+# PSD processing parameters
+bandwidth: 2  # time-bandwith product for the MTM spectral estimation (controls spectral leakage)
+k_tapers: 3   # Number of tapers for the MTM spectral estimation
+conf_ratio_exp: -9  # Exponent for confidence level for white noise detection (1 - 10^conf_ratio_exp)
+
+# Temporal and spatial
+years: ['2000', '2005', '2010', '2015', '2020']
+area_bounds: [50, -130, 25, -70]  # N, W, S, E
+
+# Landcover correlations
+decimation: 10
+
+
