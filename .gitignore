@@ -1,6 +1,9 @@
 # pycache
 **/__pycache__/
 
+# DS store
+**/.DS_Store
+
 # directories
 rawdata/
 data/
