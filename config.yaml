@@ -2,11 +2,27 @@
 
 # Directories
 rawdata_dir: "rawdata"
-landcover_dir: "landcover"
-era5_dir: "era5"
+rawdata_subdirs:
+  landcover_dir: "landcover"
+  era5_dir: "era5"
+data_dir: "data"
+data_subdirs:
+  psd_dir: "psd"
+  landcover_proc_dir: "landcover_proc"
+figure_dir: "figures"
+fig_subdirs:
+  correlations: "corr_matrices"
+  psd_slope_example: "psd_slope_example"
+
+# Plotting
+save_figs: True
+seed: 42
+#dpi: 300
+
+
+# File locations
 landcover_txt_files_dir: "src/src_landcover/txt_files"
 landcover_legend_dir: "src/src_landcover"
-data_dir: "data"
 
 # PSD processing parameters
 bandwidth: 2  # time-bandwith product for the MTM spectral estimation (controls spectral leakage)
@@ -18,6 +34,7 @@ years: ['2000', '2005', '2010', '2015', '2020']
 area_bounds: [50, -130, 25, -70]  # N, W, S, E
 
 # Landcover correlations
-decimation: 10
+decimation: 1
+method: 'daily' # daily or br (for breakpoint)
 
 

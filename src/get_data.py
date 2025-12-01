@@ -9,8 +9,8 @@ with open("config.yaml", "r") as f:
     config = yaml.safe_load(f)
 
 RAWDATA_DIR = config['rawdata_dir']
-LANDCOVER_DIR = config['landcover_dir']
-ERA5_DIR = config['era5_dir']
+LANDCOVER_DIR = config['rawdata_subdirs']['landcover_dir']
+ERA5_DIR = config['rawdata_subdirs']['era5_dir']
 LANDCOVER_TXT_FILES_DIR = config['landcover_txt_files_dir']
 
 YEARS = config['years']

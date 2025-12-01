@@ -1,3 +1,4 @@
+# psd_proc.py
 import xarray as xr
 import numpy as np
 import matplotlib.pyplot as plt
@@ -17,11 +18,11 @@ warnings.filterwarnings("ignore", category=RuntimeWarning)
 with open("config.yaml", "r") as f:
     config = yaml.safe_load(f)
 
-DATA_DIR = config['data_dir']
+DATA_DIR = f"{config['data_dir']}/{config['data_subdirs']['psd_dir']}"
 BANDWIDTH = config['bandwidth']  # bandwidht for MTM
 K_TAPERS = config['k_tapers']    # number of tapers for MTM
 CONF_RATIO = 1-10**config['conf_ratio_exp']  # confidence ratio for white noise detection
-ERA5_DIR = f"{config['rawdata_dir']}/{config['era5_dir']}"
+ERA5_DIR = f"{config['rawdata_dir']}/{config['rawdata_subdirs']['era5_dir']}"
 YEARS = config['years']
 
 # make dirs
@@ -31,6 +32,11 @@ os.makedirs(DATA_DIR, exist_ok=True)
 # process each year
 
 for year in YEARS:
+    # if there is a file with this year in the filename, skip
+    if os.path.exists(f"{DATA_DIR}/spectral_slopes_{year}.nc"):
+        print(f"Spectral slopes for year {year} exist..")
+        continue
+
     print(f"Processing spectral slopes for year {year} ...")
     data = xr.open_dataset(f"{ERA5_DIR}/t2m_{year}.nc")
 

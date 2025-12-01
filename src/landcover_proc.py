@@ -1,3 +1,4 @@
+# landcover_proc.py
 import pandas as pd
 import yaml
 
@@ -16,14 +17,15 @@ with open("config.yaml", "r") as f:
     config = yaml.safe_load(f)
 
 LANDCOVER_LEGEND_DIR = config['landcover_legend_dir']
-RAWDATA_DIR = config['rawdata_dir']
-DATA_DIR = 'data_subset'  #config['data_dir']
-LANDCOVER_DIR = config['landcover_dir']
+TIF_DIR = f"{config['rawdata_dir']}/{config['rawdata_subdirs']['landcover_dir']}"
+PSD_DIR = f"{config['data_dir']}/{config['data_subdirs']['psd_dir']}"
+LANDCOVER_PROC_DIR = f"{config['data_dir']}/{config['data_subdirs']['landcover_proc_dir']}"
 YEARS = config['years']
-
 DECIMATION = config['decimation']
 DEBUG = DECIMATION > 1
-YEAR = 2010
+
+# make dirs
+os.makedirs(LANDCOVER_PROC_DIR, exist_ok=True)
 
 # ==========================================================
 # read and process legend file
@@ -52,8 +54,6 @@ codes = codes[['Map value', 'General class', 'class-type', 'Sub-class']].rename(
 
 # ==========================================================
 # landcover correlations
-
-print(f"--- RUNNING IN {'DEBUG' if DEBUG else 'FULL'} MODE (Decimation: {DECIMATION}) ---")
 
 # Lookup Tables (LUTs) for landcover features
 print("Building Classification LUTs...")
@@ -97,8 +97,12 @@ for idx, row in df_legend.iterrows():
     except Exception: pass
 
 for year in YEARS:
+    if os.path.exists(f"{LANDCOVER_PROC_DIR}/landcover_proc_{year}.nc"):
+        print(f"Year {year} already processed..")
+        continue
+
     # Target grid setup
-    template_ds = xr.open_dataset(f"{DATA_DIR}/spectral_slopes_{year}.nc")
+    template_ds = xr.open_dataset(f"{PSD_DIR}/spectral_slopes_{year}.nc")
     lats = template_ds.latitude.values
     lons = template_ds.longitude.values
     dst_height, dst_width = len(lats), len(lons)
@@ -134,7 +138,7 @@ for year in YEARS:
     }
 
     # processing each tile
-    tif_files = glob.glob(f"{RAWDATA_DIR}/{LANDCOVER_DIR}/landcover_{year}/*.tif")
+    tif_files = glob.glob(f"{TIF_DIR}/landcover_{year}/*.tif")
     print(f"Processing {len(tif_files)} tiles...")
 
     for i, fpath in enumerate(tif_files):
@@ -183,7 +187,7 @@ for year in YEARS:
             print(f"Error: {e}")
 
     # save output
-    filename = f"{DATA_DIR}/landcover_proc_{year}.nc"
+    filename = f"{LANDCOVER_PROC_DIR}/landcover_proc_{year}.nc"
     print(f"Saving to {filename}...")
 
     data_vars = {name: (("latitude", "longitude"), arr) for name, arr in global_grids.items()}

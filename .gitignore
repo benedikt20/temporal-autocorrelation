@@ -1,9 +1,8 @@
-# pycache
+# pycache and DS store
 **/__pycache__/
-
-# DS store
 **/.DS_Store
 
 # directories
 rawdata/
-data/
+figures/
+#data/
