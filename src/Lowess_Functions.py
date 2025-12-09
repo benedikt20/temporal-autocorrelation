@@ -73,12 +73,24 @@ def remove_spectral_leakage(lx, ly, wiggly_frac=0.05, stiff_frac=0.8):
     return lx_new, ly_new, wiggly, stiff
 
 
+def psd_proc_cell(data_1d, k_tapers=3, bandwidth=2):
+    """
+    Processes the PSD using MTM method and returns log10(frequency) and log10(power).
+    """
+    d_in = scipy.signal.detrend(data_1d, type='linear') # detrend
+    psd = spectrum.mtm.MultiTapering(d_in, NW=bandwidth, k=k_tapers)
+
+    x = np.array(psd.frequencies())
+    y = np.array(psd.psd)
+
+    return np.log10(x), np.log10(y), x, y
+
+
 # ======================================
 # Main LOWESS processing function
 # ======================================
 
-
-def psd_lowess_proc(data_1d, smooth_frac=0.3, conf_ratio=1-1e-9, k_tapers=3, bandwidth=2, plot=False):
+def psd_lowess_proc(data_1d, smooth_frac=0.3, conf_ratio=1-1e-9, k_tapers=3, bandwidth=2, plot=False, zplot=False):
     """
     Plots the MTM PSD and fits a LOWESS-smoothed background.
           - smooth_frac: higher values = smoother fit
@@ -119,28 +131,42 @@ def psd_lowess_proc(data_1d, smooth_frac=0.3, conf_ratio=1-1e-9, k_tapers=3, ban
 
     lx_new, ly_new, wiggly, stiff = remove_spectral_leakage(lx, ly_distilled, wiggly_frac=0.05, stiff_frac=0.8)
 
-
+    fig = None
     if plot:
-        plt.figure(figsize=(10, 6))
+        fig = plt.figure(figsize=(10, 6))
         plt.plot(lx, ly, label='PSD (original)', color='cyan', zorder=1, lw=0.8) # original PSD
-        plt.plot(lx_new, ly_new, label='PSD_quad_adj', color='blue', zorder=1, lw=0.8) # after quadratic adjustment
+        plt.plot(lx_new, ly_new, label='PSD processed', color='blue', zorder=1, lw=0.8) # processed PSD
 
-        plt.plot(lx_new, wiggly, label='Wiggly (frac=0.05)', color='orange', linestyle='--', zorder=2, lw=1)
-        plt.plot(lx_new, stiff, label='Stiff (frac=0.3)', color='purple', linestyle='--', zorder=2, lw=1)
+        # plt.plot(lx_new, wiggly, label='Lowess($\\lambda =0.05$)', color='magenta', linestyle='--', zorder=2, lw=1)
+        # plt.plot(lx_new, stiff, label='Lowess($\\lambda =0.8$)', color='lawngreen', linestyle='--', zorder=2, lw=1)
 
         # Plot the LOWESS fit and confidence line, and outliers
-        plt.plot(lx_smooth, ly_smooth, label=f'LOWESS Fit (frac={smooth_frac})', color='red', linestyle='--', zorder=2, lw=2)
-        plt.plot(lx_smooth, ly_conf, label=f'Significance Threshold ({conf_ratio} CI)', color='orange', linestyle=':', zorder=2, lw=2)
-        plt.scatter(outlier_lx, outlier_ly, color='magenta', label=f'Significant Peaks', zorder=3, s=10)
+        plt.plot(lx_smooth, ly_smooth, label=f'Lowess fit ($\\lambda ={smooth_frac}$)', color='red', linestyle='--', zorder=2, lw=1.6)
+        plt.plot(lx_smooth, ly_conf, label=f'Confidence interval', color='orange', linestyle='--', zorder=2, lw=1.6)
+        plt.scatter(outlier_lx, outlier_ly, color='magenta', label=f'Detected outliers', zorder=3, s=10)
 
-        plt.xlabel('Log10(Frequency)')
-        plt.ylabel('Log10(Power)')
-        plt.title('Multitaper PSD with LOWESS Background Fit')
-        plt.legend(loc="lower left")
+        plt.xlabel('Log10 Frequency', fontsize=14)
+        plt.ylabel('Log10 Power', fontsize=14)
+        plt.legend(loc="lower left", fontsize=14)
         plt.grid(True, linestyle=':', linewidth=0.5)
-        plt.show()
 
-    return lx_new, ly_new 
+    if zplot: # zoomed plot to show spectral leakage removal
+        fig = plt.figure(figsize=(10, 6))
+        plt.plot(lx, ly, label='PSD (original)', color='cyan', zorder=1, lw=0.8) # original PSD
+        plt.plot(lx_new, ly_new, label='PSD processed', color='blue', zorder=1, lw=0.8) # distilled PSD
+
+        plt.plot(lx_new, wiggly, label='Lowess($\\lambda =0.05$)', color='black', linestyle='--', zorder=2, lw=1.8)
+        plt.plot(lx_new, stiff, label='Lowess($\\lambda =0.8$)', color='red', linestyle='--', zorder=2, lw=1.8)
+
+        plt.xlim(-2, -1)
+        plt.ylim(-2, 5)
+
+        plt.xlabel('Log10 Frequency', fontsize=14)
+        plt.ylabel('Log10 Power', fontsize=14)
+        plt.legend(loc="lower left", fontsize=14)
+        plt.grid(True, linestyle=':', linewidth=0.5)
+
+    return lx_new, ly_new, fig
 
 
 def log_binning(x, y, num_bins=100):
@@ -212,27 +238,29 @@ def fit_breakpoint_glsar(lx, ly, Nbin=100, plot=False):
     slope_lin = res_lin.params[1]
     rmse_lin = np.sqrt(np.mean(res_lin.resid**2))
 
+    fig = None
     if plot:
-        plt.figure(figsize=(12, 7))
-        plt.plot(lx, ly, color='blue', alpha=0.3, label='Original Processed PSD')
-        plt.scatter(binned_x, binned_y, color='blue', label='Binned Data (Means)', s=20, zorder=3)
+        fig = plt.figure(figsize=(12, 7))
+        plt.plot(lx, ly, color='blue', alpha=0.3, label='Processed PSD', lw=1)
+        plt.scatter(binned_x, binned_y, color='blue', label='Binned means', s=20, zorder=3)
         plt.plot(binned_x, best_model.fittedvalues, color='red', linestyle='--', linewidth=1.5, label='Piecewise GLSAR Fit', zorder=4)
-        # plt.plot(binned_x, res_fixed.fittedvalues, color='green', linestyle=':', linewidth=1.5, label='Fixed Breakpoint (Daily Freq)', zorder=2)
-        plt.plot(binned_x, res_lin.fittedvalues, color='orange', linestyle='-.', linewidth=1.5, 
-                 label='Linear GLSAR Fit (No Breakpoint)', zorder=2)
         plt.axvline(x=best_breakpoint, color='black', linestyle=':', linewidth=2, 
-                    label=f'Breakpoint = {best_breakpoint:.4f}')
+                    label=f'Breakpoint = {best_breakpoint:.3f}')
+        plt.plot(binned_x, res_lin.fittedvalues, color='orange', linestyle='-.', linewidth=1.5, 
+                 label='Linear GLSAR Fit', zorder=2)
         # add slope annotations
-        plt.text(0.1, 0.8, f'Slope 1: {slope1_br:.4f}', 
+        plt.text(0.1, 0.7, f'Piecewise Slope 1: {slope1_br:.3f}', 
                 transform=plt.gca().transAxes, fontsize=12, color='darkred')
-        plt.text(0.7, 0.3, f'Slope 2: {slope2_br:.4f}', 
+        plt.text(0.62, 0.32, f'Piecewise Slope 2: {slope2_br:.3f}', 
                 transform=plt.gca().transAxes, fontsize=12, color='darkred')
+        plt.text(0.3, 0.88, f'Linear Slope: {slope_lin:.3f}', 
+                transform=plt.gca().transAxes, fontsize=12, color='orange')
 
-        plt.xlabel('Log10(Frequency)')
-        plt.ylabel('Log10(Power)')
-        plt.title('Piecewise GLSAR Fit of Power Spectrum')
-        plt.legend()
+        plt.xlabel('Log10 Frequency', fontsize=14)
+        plt.ylabel('Log10 Power', fontsize=14)
+        #plt.title('Piecewise GLSAR Fit of Power Spectrum')
+        plt.legend(fontsize=12)
         plt.grid(True, linestyle=':', alpha=0.7)
-        plt.show()
+        #plt.show()
 
-    return best_breakpoint, slope1_br, slope2_br, rmse_br, slope1_dailybr, slope2_dailybr, rmse_dailybr, slope_lin, rmse_lin
+    return best_breakpoint, slope1_br, slope2_br, rmse_br, slope1_dailybr, slope2_dailybr, rmse_dailybr, slope_lin, rmse_lin, fig, (best_model, res_lin)

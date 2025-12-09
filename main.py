@@ -1,11 +1,11 @@
 import subprocess
 
 steps = [
-    "src/psd_slope_example.py",
-    "src/get_data.py",
-    "src/psd_proc.py",
-    "src/landcover_proc.py",
-    "src/corr_matrices.py"
+    "src/ObtainData.py",
+    "src/PrepData_psd.py",
+    "src/PrepData_landcover.py",
+    "src/PreVisualizations.py" #,
+    #"src/corr_matrices.py"
 ]
 
 for step in steps:

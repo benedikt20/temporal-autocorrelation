@@ -92,7 +92,7 @@ for idx, row in df_legend.iterrows():
         if "semi-arid" in typ: lut_semi_arid[code] = 1.0
         if code == 244: 
             lut_crop[code] = 1.0        # Tracks strictly cropland
-            lut_veg_cover[code] = 1.0   # Cropland also counts as full vegetation cover
+            #lut_veg_cover[code] = 1.0   # include vegetation for cropland fraction
             
     except Exception: pass
 

@@ -2,12 +2,12 @@
 import xarray as xr
 import numpy as np
 import matplotlib.pyplot as plt
-import scipy
-import spectrum
+#import scipy
+#import spectrum
 import os, yaml
 
 # import functions for lowess processing
-import lowess_funcs as lf
+import Lowess_Functions as lf
 
 # suppress runtime warnings
 import warnings
@@ -47,7 +47,7 @@ for year in YEARS:
 
     #subset = data['t2m'].isel(latitude=slice(20, 22), longitude=slice(120, 122))
 
-    bps, br_slopes1, br_slopes2, br_rmses, daily_slopes1, daily_slopes2, daily_rmses, lin_slopes, lin_rmses = xr.apply_ufunc(
+    bps, br_slopes1, br_slopes2, br_rmses, daily_slopes1, daily_slopes2, daily_rmses, lin_slopes, lin_rmses, _, _ = xr.apply_ufunc(
         lowess_spectral_slopes,    
         data['t2m'],
         input_core_dims=[['valid_time']],
