@@ -11,13 +11,14 @@ data_subdirs:
   landcover_proc_dir: "landcover_proc"
 figure_dir: "figures"
 fig_subdirs:
-  correlations: "corr_matrices"
   pre_vis: "pre_visualizations"
   model_vis: "model_visualizations"
+  post_vis: "post_visualizations"
 
 # File locations
 landcover_txt_files_dir: "src/src_landcover/txt_files"
 landcover_legend_dir: "src/src_landcover"
+shp_file: "src/src_landcover/physio_shp/physio.shp"
 
 # Sample point for PSD example
 sample_point_idx:
@@ -43,6 +44,7 @@ area_bounds: [50, -130, 25, -70]  # N, W, S, E
 decimation: 1
 method: 'daily' # daily or br (for breakpoint)
 block_size: 10  # block size for block bootstrap
-n_bootstrap: 500  # number of bootstrap samples
+n_bootstrap: 1000  # number of bootstrap samples
+ci_scale: 1.96  # scale for CI (1.96 for 95% CI)
 
 

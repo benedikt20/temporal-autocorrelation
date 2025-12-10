@@ -1,0 +1,6 @@
+dataset: https://glad.umd.edu/dataset/global-land-cover-land-use-v1 
+    download links:  https://storage.googleapis.com/earthenginepartners-hansen/GLCLU_2019/download.html
+
+shp file: https://www.sciencebase.gov/catalog/item/631405bbd34e36012efa304e
+
+

@@ -4,8 +4,9 @@ steps = [
     "src/ObtainData.py",
     "src/PrepData_psd.py",
     "src/PrepData_landcover.py",
-    "src/PreVisualizations.py" #,
-    #"src/corr_matrices.py"
+    "src/PreVisualizations.py",
+    "src/ModelingVisualizations.py",
+    "src/PostVisualizations.py"
 ]
 
 for step in steps:
