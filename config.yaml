@@ -30,6 +30,7 @@ sample_point_idx:
 save_figs: True
 seed: 42
 dpi: 300
+beta_sign: -1 # change sign of slopes beta
 
 # PSD processing parameters
 bandwidth: 2  # time-bandwith product for the MTM spectral estimation (controls spectral leakage)
@@ -45,6 +46,6 @@ decimation: 1
 method: 'daily' # daily or br (for breakpoint)
 block_size: 10  # block size for block bootstrap
 n_bootstrap: 1000  # number of bootstrap samples
-ci_scale: 1.96  # scale for CI (1.96 for 95% CI)
+ci_scale: 1.96  # scale for CI (1.96 for 95% CI) or 2.576 for 99% CI
 
 

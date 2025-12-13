@@ -1,7 +1,7 @@
 import subprocess
 
 steps = [
-    "src/ObtainData.py",
+    #"src/ObtainData.py",    # To get the data, uncomment (not necessary with the processed data)
     "src/PrepData_psd.py",
     "src/PrepData_landcover.py",
     "src/PreVisualizations.py",

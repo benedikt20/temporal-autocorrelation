@@ -29,7 +29,8 @@ METHOD = config['method']
 
 SAVE_FIGS = config.get('save_figs', False)
 DPI = config.get('dpi', 300)
-SEED = config['seed']    
+SEED = config['seed']  
+BETA_SIGN = config.get('beta_sign', 1)  
 
 CI_SCALE = config.get('ci_scale', 1.96)  
 N_BOOTSTRAP = config.get('n_bootstrap', 1000)
@@ -144,6 +145,7 @@ br_model, lin_model = models
 with open(f"{FIG_DIR}/sample_point_glsar_model_summaries.txt", "w") as f:
     f.write("Breakpoint Model Summary:\n")
     f.write(br_model.summary().as_text())
+    f.write("="*50)
     f.write("\n\nLinear Model Summary:\n")
     f.write(lin_model.summary().as_text())
 
@@ -200,6 +202,10 @@ plt.close()
 # Slope1 and Slope2 maps for all years (fixed daily breakpoint model)
 # =====================================================
 
+# fix slope sign
+spectral['slope1_daily'] = BETA_SIGN * spectral['slope1_daily']
+spectral['slope2_daily'] = BETA_SIGN * spectral['slope2_daily']
+
 # Fixed scale: get min and max
 vmin_s1 = spectral['slope1_daily'].min().item()
 vmax_s1 = spectral['slope1_daily'].max().item()
@@ -223,9 +229,9 @@ for i, year in enumerate(YEARS_NUM):
 
 #plt.tight_layout(rect=[0, 0, 0.9, 1]) 
 cbar1 = fig.colorbar(im1, ax=axs[0, :], pad=0.01, fraction=0.05, aspect=30)
-cbar1.set_label('Low frequency slope $\\beta_1$')
+cbar1.set_label('Low frequency, $\\beta_1$')
 cbar2 = fig.colorbar(im2, ax=axs[1, :], pad=0.01, fraction=0.05, aspect=30)
-cbar2.set_label('High frequency slope $\\beta_2$')
+cbar2.set_label('High frequency, $\\beta_2$')
 if SAVE_FIGS:
     plt.savefig(f"{FIG_DIR}/slope1_slope2_maps_all_years.png", dpi=DPI)
 plt.close()
@@ -247,6 +253,10 @@ for col_idx, year in enumerate(YEARS):
     ds_merged = xr.merge([ds_spectral, ds_landcover])
     df = ds_merged.to_dataframe().reset_index().dropna(subset=['fraction_urban', f'slope1_{METHOD}', f'slope2_{METHOD}'])
 
+    # fix slope sign
+    df[f'slope1_{METHOD}'] = BETA_SIGN * df[f'slope1_{METHOD}']
+    df[f'slope2_{METHOD}'] = BETA_SIGN * df[f'slope2_{METHOD}']
+
     for row_idx, slopex in enumerate(slope_types):
         ax = axs[row_idx, col_idx]
         y_col_name = f'{slopex}_{METHOD}'
@@ -265,13 +275,13 @@ for col_idx, year in enumerate(YEARS):
         if row_idx == 1:
             ax.set_xlabel('Urban fraction', fontsize=12)
         if col_idx == 0:
-            ax.set_ylabel(f'Spectral Slope $\\beta_{row_idx+1}$', fontsize=12)
+            ax.set_ylabel(f'Spectral exponent $\\beta_{row_idx+1}$', fontsize=12)
 
         # add statistics box
-        stats_text = f'$\\gamma={slope:.2f}$\n$\\rho={r_value:.2f}$'
-        ax.text(0.95, 0.05, stats_text,
+        stats_text = f'$m={slope:.2f}$\n$\\rho={r_value:.2f}$'
+        ax.text(0.95, 0.95, stats_text,
                 transform=ax.transAxes, fontsize=12,
-                verticalalignment='bottom', horizontalalignment='right',
+                verticalalignment='top', horizontalalignment='right',
                 bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
 plt.tight_layout()
 if SAVE_FIGS:
@@ -335,6 +345,10 @@ if not boots_exist:
         spectral_vars = [var for var in ds_spectral.data_vars if METHOD in var]
         land_vars = [var for var in ds_landcover.data_vars]
         ds_spectral = ds_spectral[spectral_vars]
+
+        # fix slope sign
+        ds_spectral[f'slope1_{METHOD}'] = BETA_SIGN * ds_spectral[f'slope1_{METHOD}']
+        ds_spectral[f'slope2_{METHOD}'] = BETA_SIGN * ds_spectral[f'slope2_{METHOD}']
 
         # Assign grid cells to spatial blocks
         ds_merged = xr.merge([ds_spectral, ds_landcover])
@@ -400,9 +414,9 @@ land_cols = corrs[YEARS[0]].columns.tolist()
 # map slope1 or slope2 to $\\beta_1$ or $\\beta_2$
 def beta_map(s):
     if 'slope1' in s:
-        return 'Low frequency slope $\\beta_1$'
+        return 'Low frequency, $\\beta_1$'
     elif 'slope2' in s:
-        return 'High frequency slope $\\beta_2$'
+        return 'High frequency, $\\beta_2$'
     else: return s
 
 fig, axes = plt.subplots(1, 2, figsize=(12, 5), sharex=True, sharey=True)
@@ -461,7 +475,7 @@ for i, svar in enumerate(spectral_rows[:2]):
     ax.grid(True, linestyle='--', alpha=0.7)
     ax.axhline(0, color='black', linewidth=1)
     if i % 2 == 0:
-        ax.set_ylabel("Regression slope $\\gamma$")
+        ax.set_ylabel("Regression slope $m$")
 
 handles, labels = axes_flat[0].get_legend_handles_labels()
 fig.legend(handles, labels, loc='lower center', ncol=4, bbox_to_anchor=(0.5, 0.01), frameon=False)
@@ -469,4 +483,3 @@ plt.tight_layout(rect=[0, 0.08, 1, 1])
 if SAVE_FIGS:
     plt.savefig(f"{FIG_DIR}/slopes_psd_landcover.pdf", bbox_inches='tight')
 plt.close()
-

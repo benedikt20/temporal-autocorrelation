@@ -9,6 +9,10 @@ import geopandas as gpd
 import warnings
 warnings.filterwarnings("ignore")
 
+import geopandas as gpd
+usa = gpd.read_file('https://naciscdn.org/naturalearth/50m/cultural/ne_50m_admin_1_states_provinces.zip')
+usa_states = usa[usa["iso_a2"] == "US"]
+
 # ==========================================
 # Config
 # ==========================================
@@ -20,6 +24,7 @@ FIG_DIR = f"{config['figure_dir']}/{config['fig_subdirs']['post_vis']}"
 PSD_DIR = f"{config['data_dir']}/{config['data_subdirs']['psd_dir']}"
 SHP_FILE = config['shp_file']
 METHOD = config['method']
+BETA_SIGN = config.get('beta_sign', 1)
 
 SAVE_FIGS = config.get('save_figs', False)
 DPI = config.get('dpi', 300)
@@ -46,7 +51,7 @@ for var in s_data_2000.data_vars:
 
 # Plot the difference in slope1_daily
 plt.figure(figsize=(10, 5))
-diff[f'slope1_{METHOD}'].plot(cbar_kwargs={'label': '$\\Delta \\beta_1$'})
+(BETA_SIGN * diff[f'slope1_{METHOD}']).plot(cbar_kwargs={'label': '$\\Delta \\beta_1$'})
 plt.title('Change in $\\beta_1$ (2020 - 2000)')
 gdf.boundary.plot(ax=plt.gca(), color="black", linewidth=0.4, alpha=0.5)
 plt.tight_layout()
@@ -55,12 +60,36 @@ if SAVE_FIGS:
 plt.close()
 
 plt.figure(figsize=(10, 5))
-diff[f'slope2_{METHOD}'].plot(cbar_kwargs={'label': '$\\Delta \\beta_2$'})
+(BETA_SIGN * diff[f'slope2_{METHOD}']).plot(cbar_kwargs={'label': '$\\Delta \\beta_2$'})
 plt.title('Change in $\\beta_2$ (2020 - 2000)')
 gdf.boundary.plot(ax=plt.gca(), color="black", linewidth=0.4, alpha=0.5)
 plt.tight_layout()
 if SAVE_FIGS:
     plt.savefig(f"{FIG_DIR}/beta2_change.png", dpi=DPI/2)
+plt.close()
+
+# ==========================================
+# beta1 and beta2 change plots (for the executive summary)
+#    - with state boundaries
+# ==========================================
+
+# Plot the difference in slope1_daily
+plt.figure(figsize=(10, 5))
+(BETA_SIGN * diff[f'slope1_{METHOD}']).plot(cbar_kwargs={'label': 'Change in persistence ($\\Delta \\beta_1$)'})
+plt.title('Multi-day (>24 hours) persistence change from 2000 to 2020')
+usa_states.boundary.plot(ax=plt.gca(), color="black", linewidth=0.4, alpha=0.7)
+plt.tight_layout()
+if SAVE_FIGS:
+    plt.savefig(f"{FIG_DIR}/executive_summary_beta1.png", dpi=DPI/2)
+plt.close()
+
+plt.figure(figsize=(10, 5))
+(BETA_SIGN * diff[f'slope2_{METHOD}']).plot(cbar_kwargs={'label': 'Change in persistence ($\\Delta \\beta_2$)'})
+plt.title('Within-day (<24 hours) persistence change from 2000 to 2020')
+usa_states.boundary.plot(ax=plt.gca(), color="black", linewidth=0.4, alpha=0.7)
+plt.tight_layout()
+if SAVE_FIGS:
+    plt.savefig(f"{FIG_DIR}/executive_summary_beta2.png", dpi=DPI/2)
 plt.close()
 
 
