@@ -1,0 +1,16 @@
+numpy
+matplotlib
+scipy
+statsmodels
+pandas
+xarray
+dask
+netCDF4
+bottleneck
+pyyaml
+seaborn
+requests
+rasterio
+geopandas
+cdsapi
+spectrum
